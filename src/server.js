@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
 
 import express from 'express'
-import { CONNECT_DB, GET_DB } from '~/config/mongodb'
+import AsyncExitHook from 'async-exit-hook'
+import { CONNECT_DB, GET_DB, CLOSE_DB } from '~/config/mongodb'
 
 const START_SERVER = () => {
   const app = express()
@@ -12,16 +13,26 @@ const START_SERVER = () => {
   app.get('/', async (req, res) => {
     console.log(await GET_DB().listCollections().toArray())
     res.end('<h1>Hello World!</h1><hr>')
+    process.exit(0)
   })
 
   app.listen(port, hostname, () => {
-    console.log(`3. Hello marchisDev, Backend Server is running successfully at http://${hostname}:${port}/`)
+    console.log(
+      `3. Hello marchisDev, Backend Server is running successfully at http://${hostname}:${port}/`
+    )
+  })
+
+  AsyncExitHook(() => {
+    console.log('4. Closing MongoDB connection...')
+    CLOSE_DB()
+    console.log('5. MongoDB connection closed successfully!')
   })
 }
 
+
 // chi khi ket noi thanh cong toi MongoDB thi moi chay server
 // Immediately Invoked Function Expression (IIFE) / Anonymous Async Function
-(async () => {
+;(async () => {
   try {
     console.log('1. Connecting to MongoDB...')
     await CONNECT_DB()
