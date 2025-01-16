@@ -1,16 +1,11 @@
-/**
- */
-
-const MONGODB_URI = 'mongodb+srv://marchisDev:gBZu8na97EnByumZ@cluster0-marchisdev.bl6vb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0-marchisDev'
-const DATABASE_NAME = 'marchisDev-Trello'
-
+import { env } from '~/config/environment'
 import { MongoClient, ServerApiVersion } from 'mongodb'
 
 // khoi tao mot doi tuong trelloInstance bna dau la null(vi chua connect)
 let trelloDatabaseInstance = null
 
 // khoi tao mot doi tuong mongoClientInstance de connect toi MongoDB
-const mongoClientInstance = new MongoClient(MONGODB_URI, {
+const mongoClientInstance = new MongoClient(env.MONGODB_URI, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
@@ -22,7 +17,7 @@ export const CONNECT_DB = async () => {
   // goi ket noi toi mongoDB Atlas vs URI da khai bao trong than cua clientInstance
   await mongoClientInstance.connect()
   // ket noi thanh cong thi lay ra database theo ten va gan nguoc no lai vao bien trelloDatabaseInstance o tren
-  trelloDatabaseInstance = mongoClientInstance.db(DATABASE_NAME)
+  trelloDatabaseInstance = mongoClientInstance.db(env.DATABASE_NAME)
 }
 
 export const CLOSE_DB = async () => {
