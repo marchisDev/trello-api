@@ -15,13 +15,10 @@ const createNew = async (req, res, next) => {
   })
 
   try {
-    // console.log('req.body:', req.body)
     // TH co nhieu loi validation thi tra ve tat ca loi
     await correctCondition.validateAsync(req.body, { abortEarly: false })
-    //   next()
-    res
-      .status(StatusCodes.CREATED)
-      .json({ message: 'APIs create new board from validation' })
+    // Validate du lieu xong xuoi hop le thi cho request di tipe sang Controller tiep theo
+    next()
   } catch (error) {
     res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
       errors: new Error(error).message
