@@ -9,7 +9,6 @@ const createNew = async (req, res, next) => {
     console.log('req.body:', req.body)
     // dieu huong du lieu sang tang service
     const createdBoard = await boardService.createNew(req.body)
-    
     //   co ket qua thi tra ve client
     // throw new ApiError(StatusCodes.BAD_REQUEST, 'marchisDev test error')
     res.status(StatusCodes.CREATED).json(createdBoard)

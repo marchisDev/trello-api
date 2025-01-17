@@ -6,7 +6,7 @@ const createNew = async (reqBody) => {
     // Xu li logic du lieu tuy dac thu du an
     const newBoard = {
       ...reqBody,
-      slug: slugify(reqBody.title),
+      slug: slugify(reqBody.title)
     }
 
     // goi tang model de xu li logic luu vao database
@@ -22,5 +22,5 @@ const createNew = async (reqBody) => {
 }
 
 export const boardService = {
-  createNew,
+  createNew
 }
