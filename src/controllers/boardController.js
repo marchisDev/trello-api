@@ -6,7 +6,7 @@ import { boardService } from '~/services/boardService'
 const createNew = async (req, res, next) => {
   try {
     // eslint-disable-next-line no-console
-    console.log('req.body:', req.body)
+    // console.log('req.body:', req.body)
     // dieu huong du lieu sang tang service
     const createdBoard = await boardService.createNew(req.body)
     //   co ket qua thi tra ve client
