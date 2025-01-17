@@ -5,6 +5,8 @@ import AsyncExitHook from 'async-exit-hook'
 import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
 import { env } from '~/config/environment'
 import { APIs_V1 } from '~/routes/v1'
+import { errorHandlingMiddleware } from '~/middlewares/errorHandlingMiddleware'
+
 const START_SERVER = () => {
   const app = express()
 
@@ -13,6 +15,9 @@ const START_SERVER = () => {
 
   // Use APIs_V1 for all routes starting with /v1
   app.use('/v1', APIs_V1)
+
+  // Middleware to handle errors
+  app.use(errorHandlingMiddleware)
 
   app.listen(env.APP_PORT, env.APP_HOST, () => {
     console.log(

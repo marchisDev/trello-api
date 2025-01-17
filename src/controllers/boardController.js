@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes'
+// import ApiError from '~/utils/ApiError'
 
 // eslint-disable-next-line no-unused-vars
 const createNew = async (req, res, next) => {
@@ -8,14 +9,11 @@ const createNew = async (req, res, next) => {
     // dieu huong du lieu sang tang service
 
     //   co ket qua thi tra ve client
+    // throw new ApiError(StatusCodes.BAD_REQUEST, 'marchisDev test error')
     res
       .status(StatusCodes.CREATED)
       .json({ message: 'APIs create new board from controller' })
-  } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      errors: error.message
-    })
-  }
+  } catch (error) { next(error) }
 }
 
 export const boardController = {
