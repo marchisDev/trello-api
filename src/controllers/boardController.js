@@ -15,6 +15,20 @@ const createNew = async (req, res, next) => {
   } catch (error) { next(error) }
 }
 
+const getDetails = async (req, res, next) => {
+  try {
+    // eslint-disable-next-line no-console
+    // console.log('req.params:', req.params)
+    const boardId = req.params.id
+
+    const board = await boardService.getDetails(boardId)
+    //   co ket qua thi tra ve client
+    // throw new ApiError(StatusCodes.BAD_REQUEST, 'marchisDev test error')
+    res.status(StatusCodes.OK).json(board)
+  } catch (error) { next(error) }
+}
+
 export const boardController = {
-  createNew
+  createNew,
+  getDetails
 }
