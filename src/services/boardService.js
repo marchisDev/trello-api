@@ -2,6 +2,7 @@ import { slugify } from '~/utils/formatters'
 import { boardModel } from '~/models/boardModel'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes } from 'http-status-codes'
+import { cloneDeep } from 'lodash'
 
 const createNew = async (reqBody) => {
   // eslint-disable-next-line no-useless-catch
@@ -39,7 +40,20 @@ const getDetails = async (boardId) => {
     if (!board) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found')
     }
-    return board
+
+    // Clone ra mot board hoan toan moi de xu li, khong anh huong toi board ban dau, tuy muc  dich su dung ve sau ma
+    // co can cloneDeep hay la khong
+    const resBoard = cloneDeep(board)
+    // Dua card ve dung column cua no
+    resBoard.columns.forEach((column) => {
+      // cach dung .equals nay la boi cta hieu ObjectId cua mongoDB co method support equals
+      column.cards = resBoard.cards.filter((card) => card.columnId.equals(column._id))
+      // column.cards = resBoard.cards.filter((card) => card.columnId.toString() === column._id.toString())
+    })
+
+    // Xoa field cards ra khoi board ban dau
+    delete resBoard.cards
+    return resBoard
   } catch (error) {
     throw error
   }
