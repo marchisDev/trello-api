@@ -59,7 +59,21 @@ const getDetails = async (boardId) => {
   }
 }
 
+const update = async (boardId, reqBody) => {
+  try {
+    const updateData = { ...reqBody, updatedAt: Date.now() }
+
+    // lay ban ghi board sau khi goi (tuy muc dich du an ma co can buoc nay hay khong)
+    const updatedBoard = await boardModel.update(boardId, updateData)
+
+    return updatedBoard
+  } catch (error) {
+    throw error
+  }
+}
+
 export const boardService = {
   createNew,
-  getDetails
+  getDetails,
+  update
 }
