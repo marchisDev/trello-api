@@ -18,12 +18,15 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
     .default([]),
   createdAt: Joi.date().timestamp('javascript').default(Date.now()),
   updatedAt: Joi.date().timestamp('javascript').default(null),
-  _destroy: Joi.boolean().default(false),
+  _destroy: Joi.boolean().default(false)
 })
+
+// chi dinh ra nhung field khong duoc update trong ham update
+const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
 
 const validateBeforeCreate = async (data) => {
   return await BOARD_COLLECTION_SCHEMA.validateAsync(data, {
-    abortEarly: false,
+    abortEarly: false
   })
 }
 
@@ -62,24 +65,25 @@ const getDetails = async (id) => {
         {
           $match: {
             _id: new ObjectId(id),
-            _destroy: false,
-          },
+            _destroy: false
+          }
         },
         {
           $lookup: {
             from: columnModel.COLUMN_COLLECTION_NAME,
             localField: '_id',
             foreignField: 'boardId',
-            as: 'columns',
-          },
+            as: 'columns'
+          }
         },
         {
           $lookup: {
             from: cardModel.CARD_COLLECTION_NAME,
             localField: '_id',
             foreignField: 'boardId',
-            as: 'cards',
-          },
+            as: 'cards'
+          }
+        // eslint-disable-next-line comma-dangle
         },
       ])
       .toArray()
@@ -101,7 +105,29 @@ const pushColumnOrderIds = async (column) => {
         { returnDocument: 'after' }
       )
 
-    return result.value
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+const update = async (boardId, updateData) => {
+  try {
+    // loc nhung field khong duoc update
+    Object.keys(updateData).forEach((key) => {
+      if (INVALID_UPDATE_FIELDS.includes(key)) {
+        delete updateData[key]
+      }
+    })
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        { _id: new ObjectId(boardId) },
+        { $set: updateData },
+        { returnDocument: 'after' }
+      )
+
+    return result
   } catch (error) {
     throw new Error(error)
   }
@@ -114,4 +140,5 @@ export const boardModel = {
   findOneById,
   getDetails,
   pushColumnOrderIds,
+  update
 }

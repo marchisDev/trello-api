@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes'
 import ApiError from '~/utils/ApiError'
 import { BOARD_TYPES } from '~/utils/constants'
 
-const createNew = async (req, res, next) => {
+const createNew = async (req, _res, next) => {
   // BE bat buoc phai validate du lieu dau vao
   const correctCondition = Joi.object({
     title: Joi.string().required().min(3).max(50).trim().strict().messages({
@@ -11,10 +11,13 @@ const createNew = async (req, res, next) => {
       'string.empty': 'Title must not empty',
       'string.min': 'Title must have at least 3 characters',
       'string.max': 'Title must have at most 50 characters',
-      'string.trim': 'Title must not contain leading or trailing spaces'
+      // eslint-disable-next-line comma-dangle
+      'string.trim': 'Title must not contain leading or trailing spaces',
     }),
     description: Joi.string().required().min(3).max(255).trim().strict(),
-    type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE).required()
+    type: Joi.string()
+      .valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE)
+      .required()
   })
 
   try {
@@ -32,6 +35,34 @@ const createNew = async (req, res, next) => {
   }
 }
 
+const update = async (req, _res, next) => {
+  // BE bat buoc phai validate du lieu dau vao
+  const correctCondition = Joi.object({
+    // *Luu y: khong dung ham require trong TH update
+    title: Joi.string().min(3).max(50).trim().strict(),
+    description: Joi.string().min(3).max(255).trim().strict(),
+    type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE)
+  })
+
+  try {
+    // TH co nhieu loi validation thi tra ve tat ca loi
+    // Doi vs TH update, cho phep Unknown de khong can day mot so field len
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true
+    })
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(
+      StatusCodes.UNPROCESSABLE_ENTITY,
+      errorMessage
+    )
+    next(customError)
+  }
+}
+
 export const boardValidation = {
-  createNew
+  createNew,
+  update
 }
