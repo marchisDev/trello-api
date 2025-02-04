@@ -28,6 +28,37 @@ const createNew = async (req, res, next) => {
   }
 }
 
+const update = async (req, _res, next) => {
+  // BE bat buoc phai validate du lieu dau vao
+  const correctCondition = Joi.object({
+    // *Luu y: khong dung ham require trong TH update
+    // Neu lam tinh nang di chuyen Column sang Board thi moi validate boardId
+    // boardId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    title: Joi.string().min(3).max(50).trim().strict(),
+    cardOrderIds: Joi.array().items(
+      Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+    )
+  })
+
+  try {
+    // TH co nhieu loi validation thi tra ve tat ca loi
+    // Doi vs TH update, cho phep Unknown de khong can day mot so field len
+    await correctCondition.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true
+    })
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(
+      StatusCodes.UNPROCESSABLE_ENTITY,
+      errorMessage
+    )
+    next(customError)
+  }
+}
+
 export const columnValidation = {
   createNew,
+  update
 }
