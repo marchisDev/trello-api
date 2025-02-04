@@ -5,7 +5,7 @@ const createNew = async (reqBody) => {
   try {
     // Xu li logic du lieu tuy dac thu du an
     const newColumn = {
-      ...reqBody,
+      ...reqBody
     }
 
     // goi tang model de xu li logic luu vao database
@@ -29,6 +29,22 @@ const createNew = async (reqBody) => {
   }
 }
 
+const update = async (columnId, reqBody) => {
+  try {
+    const updateData = { ...reqBody, updatedAt: Date.now() }
+
+    // lay ban ghi board sau khi goi (tuy muc dich du an ma co can buoc nay hay khong)
+    const updatedColumn = await columnModel.update(columnId, updateData)
+
+    // console.log('columnId service:', columnId)
+    return updatedColumn
+  } catch (error) {
+    throw error
+  }
+}
+
+
 export const columnService = {
   createNew,
+  update
 }

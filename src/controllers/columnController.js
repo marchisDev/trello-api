@@ -14,7 +14,20 @@ const createNew = async (req, res, next) => {
   } catch (error) { next(error) }
 }
 
+const update = async (req, res, next) => {
+  try {
+    const columnId = req.params.id
+    // console.log('columnId controller:', columnId)
+
+    const updatedColumn = await columnService.update(columnId, req.body)
+    //   co ket qua thi tra ve client
+    // throw new ApiError(StatusCodes.BAD_REQUEST, 'marchisDev test error')
+    res.status(StatusCodes.OK).json(updatedColumn)
+  } catch (error) { next(error) }
+}
+
 
 export const columnController = {
   createNew,
+  update
 }
