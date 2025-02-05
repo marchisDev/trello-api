@@ -42,12 +42,12 @@ const createNew = async (data) => {
   }
 }
 
-const findOneById = async (id) => {
+const findOneById = async (boardId) => {
   try {
     // console.log('id: ', id)
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
-      .findOne({ _id: new ObjectId(id) })
+      .findOne({ _id: new ObjectId(boardId) })
     return result
   } catch (error) {
     throw new Error(error)
@@ -111,6 +111,24 @@ const pushColumnOrderIds = async (column) => {
   }
 }
 
+// Lay 1 phan tu columnId ra khoi mang columnOrderIds
+// https://www.mongodb.com/docs/manual/reference/operator/update/pull/#mongodb-update-up.-pull
+const pullColumnOrderIds = async (column) => {
+  try {
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        { _id: new ObjectId(column.boardId) },
+        { $pull: { columnOrderIds: new ObjectId(column._id) } },
+        { returnDocument: 'after' }
+      )
+
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 const update = async (boardId, updateData) => {
   try {
     // loc nhung field khong duoc update
@@ -148,5 +166,6 @@ export const boardModel = {
   findOneById,
   getDetails,
   pushColumnOrderIds,
-  update
+  update,
+  pullColumnOrderIds
 }

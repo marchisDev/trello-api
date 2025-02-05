@@ -1,5 +1,8 @@
 import { columnModel } from '~/models/columnModel'
 import { boardModel } from '~/models/boardModel'
+import { cardModel } from '~/models/cardModel'
+import ApiError from '~/utils/ApiError'
+import { StatusCodes } from 'http-status-codes'
 
 const createNew = async (reqBody) => {
   try {
@@ -43,8 +46,31 @@ const update = async (columnId, reqBody) => {
   }
 }
 
+const deleteItem = async (columnId) => {
+  try {
+    const targetColumn = await columnModel.findOneById(columnId)
+
+    if (!targetColumn) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Column not found')
+    }
+    // https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/write-operations/delete/
+    //  xoa column
+    await columnModel.deleteOneById(columnId)
+    // xoa toan card thuoc column tren
+    await cardModel.deleteManyByColumnId(columnId)
+
+    // xoa columnId trong mang columnOrderIds cua board
+    await boardModel.pullColumnOrderIds(targetColumn)
+
+    return { deleteResult: 'Delete column and its cards successfully' }
+  } catch (error) {
+    throw error
+  }
+}
+
 
 export const columnService = {
   createNew,
-  update
+  update,
+  deleteItem
 }
