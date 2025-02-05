@@ -26,8 +26,21 @@ const update = async (req, res, next) => {
   } catch (error) { next(error) }
 }
 
+const deleteItem = async (req, res, next) => {
+  try {
+    const columnId = req.params.id
+    // console.log('columnId controller:', columnId)
+
+    const result = await columnService.deleteItem(columnId)
+    //   co ket qua thi tra ve client
+    // throw new ApiError(StatusCodes.BAD_REQUEST, 'marchisDev test error')
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) { next(error) }
+}
+
 
 export const columnController = {
   createNew,
-  update
+  update,
+  deleteItem
 }
