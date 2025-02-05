@@ -24,7 +24,7 @@ const START_SERVER = () => {
   // Middleware to handle errors
   app.use(errorHandlingMiddleware)
 
-  if (env.BUILD_MODE === 'production') { 
+  if (env.BUILD_MODE === 'production') {
     app.listen(process.env.PORT, () => {
       console.log(
         `3. Production Hello ${env.AUTHOR}, Backend Server is running successfully at Port: ${process.env.PORT}`
@@ -37,8 +37,6 @@ const START_SERVER = () => {
       )
     })
   }
-
-
 
   AsyncExitHook(() => {
     console.log('4. Closing MongoDB connection...')
