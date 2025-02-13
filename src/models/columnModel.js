@@ -25,8 +25,6 @@ const COLUMN_COLLECTION_SCHEMA = Joi.object({
 // chi dinh ra nhung field khong duoc update trong ham update
 const INVALID_UPDATE_FIELDS = ['_id', 'boardId', 'createdAt']
 
-/*************  ✨ Codeium Command ⭐  *************/
-/******  53e894ec-11e4-4a20-ba5b-3cef6b21d683  *******/
 const validateBeforeCreate = async (data) => {
   return await COLUMN_COLLECTION_SCHEMA.validateAsync(data, {
     abortEarly: false
