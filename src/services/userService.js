@@ -4,35 +4,45 @@ import { StatusCodes } from 'http-status-codes'
 import bcryptis from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 import { pickUser } from '~/utils/formatters'
+import { WEBSITE_DOMAIN } from '~/utils/constants'
+import { BrevoProvider } from '~/providers/BrevoProvider'
 
 const createNew = async (reqBody) => {
   try {
-    //   Kiem tra xem email da ton tai chua
+    // Kiểm tra xem email đã tồn tại chưa
     const existUser = await userModel.findOneByEmail(reqBody.email)
     if (existUser) {
       throw new ApiError(StatusCodes.CONFLICT, 'Email already exists')
     }
-    // Tao data de luu vao DB
-    //   nameFromEmail dung de lay ten tu email: neu email la marchisdev@gmail.com thi ta se lay duoc "marchisdev"
+    // Tạo data để lưu vào DB
     const nameFromEmail = reqBody.email.split('@')[0]
     const newUser = {
       email: reqBody.email,
-      password: bcryptis.hashSync(reqBody.password, 8), // tham so thu 2 la do phuc tap cua hash
+      password: bcryptis.hashSync(reqBody.password, 8), // tham số thứ 2 là độ phức tạp của hash
       username: nameFromEmail,
       displayName: nameFromEmail,
       verifyToken: uuidv4()
     }
 
-    //   Thuc hien luu thong tin user vai DB
+    // Thực hiện lưu thông tin user vào DB
     const createdUser = await userModel.createNew(newUser)
-    // lay ban ghi board sau khi goi (tuy muc dich du an ma co can buoc nay hay khong)
+    // Lấy bản ghi user sau khi gọi (tùy mục đích dự án mà có cần bước này hay không)
     const getNewUser = await userModel.findOneById(createdUser.insertedId)
-    // Gui email cho nguoi dung xac thuc tai khoan
-
-    //   return tra ve du lieu cho Controller
+    // Gửi email cho người dùng xác thực tài khoản
+    const verificationLink = `${WEBSITE_DOMAIN}/account/verification?email=${getNewUser.email}&token=${getNewUser.verifyToken}`
+    const customSubject = 'Trello Account Verification: Please verify your email before using our services'
+    const htmlContent = `
+    <h3>Here is your verification link:</h3>
+    <h3>${verificationLink}</h3>
+    <h3>Sincerely, <br/> MarchisDev - Author of Trello</h3>
+    `
+    // Gọi tới Provider gửi mail
+    await BrevoProvider.sendEmail(getNewUser.email, customSubject, htmlContent)
+    // Trả về dữ liệu cho Controller
     return pickUser(getNewUser)
   } catch (error) {
-    throw error
+    // console.error('Error in createNew userService:', error)
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'HTTP request failed')
   }
 }
 
