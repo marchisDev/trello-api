@@ -115,11 +115,13 @@ const login = async (reqBody) => {
     const accessToken = await JwtProvider.generateToken(
       userInfo,
       env.ACCESS_TOKEN_SECRET_SIGNATURE,
+      // 5 // 5 giay de test
       env.ACCESS_TOKEN_LIFE
     )
     const refreshToken = await JwtProvider.generateToken(
       userInfo,
       env.REFRESH_TOKEN_SECRET_SIGNATURE,
+      // 15 // 15 giay de test
       env.REFRESH_TOKEN_LIFE
     )
     // Tra ve thong tin cua user kem theo 2 cai token vua tao ra
@@ -133,8 +135,39 @@ const login = async (reqBody) => {
   }
 }
 
+const refreshToken = async (clientRefreshToken) => {
+  try {
+    // verify / giai ma cai refreshToken nhan duoc tu client xem co hop le hay khong
+    const refreshTokenDecoded = await JwtProvider.verifyToken(
+      clientRefreshToken,
+      env.REFRESH_TOKEN_SECRET_SIGNATURE
+    )
+    // console.log(refreshTokenDecoded)
+
+    // doan nay vi chung ta chi luu nhung thong tin update va co dinh cua user trong token roi, vi vay co the
+    // lay luon tu decoded token ma khong can phai query lai DB de lay thong data moi
+    const userInfo = {
+      _id: refreshTokenDecoded._id,
+      email: refreshTokenDecoded.email
+    }
+
+    // tao ra cai accessToken moi de tra ve cho client
+    const accessToken = await JwtProvider.generateToken(
+      userInfo,
+      env.ACCESS_TOKEN_SECRET_SIGNATURE,
+      // 5 // 5 giay de test
+      env.ACCESS_TOKEN_LIFE
+    )
+
+    return { accessToken }
+  } catch (error) {
+    throw error
+  }
+}
+
 export const userService = {
   createNew,
   verifyAccount,
-  login
+  login,
+  refreshToken
 }
