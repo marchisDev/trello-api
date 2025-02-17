@@ -8,6 +8,7 @@ import { WEBSITE_DOMAIN } from '~/utils/constants'
 import { BrevoProvider } from '~/providers/BrevoProvider'
 import { env } from '~/config/environment'
 import { JwtProvider } from '~/providers/JwtProvider'
+import { CloudinaryProvider } from '~/providers/CloudinaryProvider'
 
 const createNew = async (reqBody) => {
   try {
@@ -165,7 +166,7 @@ const refreshToken = async (clientRefreshToken) => {
   }
 }
 
-const update = async (userId, reqBody) => {
+const update = async (userId, reqBody, userAvatar) => {
   try {
     // Query User va kiem tra cho chac chan
     const existUser = await userModel.findOneById(userId)
@@ -191,7 +192,21 @@ const update = async (userId, reqBody) => {
       updatedUser = await userModel.update(existUser._id, {
         password: bcryptjs.hashSync(reqBody.new_password, 8)
       })
-    } else {
+    }
+    // TH upload file len Cloud Storage (Cloudinary, AWS S3, Google Cloud Storage, ...)
+    else if (userAvatar) {
+      const uploadResult = await CloudinaryProvider.streamUpload(
+        userAvatar.buffer,
+        'user-avatars'
+      )
+      // console.log('uploadResult', uploadResult)
+
+      // Luu lai url (secure_url) cua cua cai file anh vao trong DB
+      updatedUser = await userModel.update(existUser._id, {
+        avatar: uploadResult.secure_url
+      })
+    }
+    else {
       // TH update thong tin user khac
       updatedUser = await userModel.update(existUser._id, reqBody)
     }
