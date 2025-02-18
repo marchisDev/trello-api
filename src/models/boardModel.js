@@ -37,12 +37,17 @@ const validateBeforeCreate = async (data) => {
   })
 }
 
-const createNew = async (data) => {
+const createNew = async (userId, data) => {
   try {
     const validData = await validateBeforeCreate(data)
+    const newBoardToAdd = {
+      ...validData,
+      ownerIds: [new ObjectId(userId)]
+    }
+
     const createdBoard = GET_DB()
       .collection(BOARD_COLLECTION_NAME)
-      .insertOne(validData)
+      .insertOne(newBoardToAdd)
     return createdBoard
   } catch (error) {
     throw new Error(error)
@@ -62,18 +67,26 @@ const findOneById = async (boardId) => {
 }
 
 // query tong hop (aggregate) du lieu de lay toan bo columns va card thuoc ve board
-const getDetails = async (id) => {
+const getDetails = async (userId, boardId) => {
   try {
+    const queryCondition = [
+      { _id: new ObjectId(boardId) },
+      // Dk1: Board chua bi xoa
+      { _destroy: false },
+      // Dk2: cai thang userId dang thuc hien request phai thuoc 1 trong 2 mang ownerIds hoac memberIds
+      {
+        $or: [
+          { ownerIds: { $all: [new ObjectId(userId)] } },
+          { memberIds: { $all: [new ObjectId(userId)] } }
+        ]
+      }
+    ]
+
     // const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({ _id: new ObjectId(id) })
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
       .aggregate([
-        {
-          $match: {
-            _id: new ObjectId(id),
-            _destroy: false
-          }
-        },
+        { $match: { $and: queryCondition } },
         {
           $lookup: {
             from: columnModel.COLUMN_COLLECTION_NAME,
@@ -200,8 +213,9 @@ const getBoards = async (userId, page, itemsPerPage) => {
           }
         ],
         // Khai bao them thuoc tinh collection locale 'en' de fix vu chu B hoa va chu a thuong o tren
-        { locale: 'en' }
-      ).toArray()
+        { collation: { locale: 'en', strength: 2 } } // Thêm tùy chọn collation
+      )
+      .toArray()
     // console.log('query: ', query)
 
     const res = query[0]
