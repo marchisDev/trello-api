@@ -5,7 +5,7 @@ const createNew = async (reqBody) => {
   try {
     // Xu li logic du lieu tuy dac thu du an
     const newCard = {
-      ...reqBody,
+      ...reqBody
     }
 
     // goi tang model de xu li logic luu vao database
@@ -25,6 +25,20 @@ const createNew = async (reqBody) => {
   }
 }
 
+const update = async (cardId, reqBody) => {
+  try {
+    const updateData = {
+      ...reqBody,
+      updatedAt: Date.now()
+    }
+    const updatedCard = await cardModel.update(cardId, updateData)
+    return updatedCard
+  } catch (error) {
+    throw error
+  }
+}
+
 export const cardService = {
   createNew,
+  update
 }
