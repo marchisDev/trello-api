@@ -1,20 +1,43 @@
 import Joi from 'joi'
 import { ObjectId } from 'mongodb'
-import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
+import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE, EMAIL_RULE, EMAIL_RULE_MESSAGE } from '~/utils/validators'
 import { GET_DB } from '~/config/mongodb'
 
 // Define Collection (name & schema)
 const CARD_COLLECTION_NAME = 'cards'
 const CARD_COLLECTION_SCHEMA = Joi.object({
-  boardId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
-  columnId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+  boardId: Joi.string()
+    .required()
+    .pattern(OBJECT_ID_RULE)
+    .message(OBJECT_ID_RULE_MESSAGE),
+  columnId: Joi.string()
+    .required()
+    .pattern(OBJECT_ID_RULE)
+    .message(OBJECT_ID_RULE_MESSAGE),
 
   title: Joi.string().required().min(3).max(50).trim().strict(),
   description: Joi.string().optional(),
 
+  cover: Joi.string().default(null),
+  memberIds: Joi.array()
+    .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+    .default([]),
+
+  // Du lieu comments cuar Card chung ta se nhung - embedded vao ban ghi card luon nhu duoi day:
+  comments: Joi.array().items({
+    userId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    userEmail: Joi.string().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
+    userAvater: Joi.string(),
+    userDisplayName: Joi.string(),
+    content: Joi.string(),
+    // Cho nay luu y vi dung $push de them comment vao array nen khong set default Date.now()
+    // luon giong ham insertOne khi create duoc
+    commentedAt: Joi.date().timestamp()
+  }).default([]),
+
   createdAt: Joi.date().timestamp('javascript').default(Date.now),
   updatedAt: Joi.date().timestamp('javascript').default(null),
-  _destroy: Joi.boolean().default(false)
+  _destroy: Joi.boolean().default(false),
 })
 
 // chi dinh ra nhung field khong duoc update trong ham update
@@ -22,7 +45,7 @@ const INVALID_UPDATE_FIELDS = ['_id', 'boardId', 'createdAt']
 
 const validateBeforeCreate = async (data) => {
   return await CARD_COLLECTION_SCHEMA.validateAsync(data, {
-    abortEarly: false
+    abortEarly: false,
   })
 }
 
@@ -33,7 +56,7 @@ const createNew = async (data) => {
     const newCardToAdd = {
       ...validData,
       boardId: new ObjectId(validData.boardId),
-      columnId: new ObjectId(validData.columnId)
+      columnId: new ObjectId(validData.columnId),
     }
     const createdCard = GET_DB()
       .collection(CARD_COLLECTION_NAME)
@@ -102,5 +125,5 @@ export const cardModel = {
   createNew,
   findOneById,
   update,
-  deleteManyByColumnId
+  deleteManyByColumnId,
 }
