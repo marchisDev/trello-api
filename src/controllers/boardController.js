@@ -5,10 +5,11 @@ import { boardService } from '~/services/boardService'
 // eslint-disable-next-line no-unused-vars
 const createNew = async (req, res, next) => {
   try {
+    const userId = req.jwtDecoded._id
     // eslint-disable-next-line no-console
     // console.log('req.body:', req.body)
     // dieu huong du lieu sang tang service
-    const createdBoard = await boardService.createNew(req.body)
+    const createdBoard = await boardService.createNew(userId, req.body)
     //   co ket qua thi tra ve client
     // throw new ApiError(StatusCodes.BAD_REQUEST, 'marchisDev test error')
     res.status(StatusCodes.CREATED).json(createdBoard)
@@ -19,9 +20,10 @@ const getDetails = async (req, res, next) => {
   try {
     // eslint-disable-next-line no-console
     // console.log('req.params:', req.params)
+    const userId = req.jwtDecoded._id
     const boardId = req.params.id
 
-    const board = await boardService.getDetails(boardId)
+    const board = await boardService.getDetails(userId, boardId)
     //   co ket qua thi tra ve client
     // throw new ApiError(StatusCodes.BAD_REQUEST, 'marchisDev test error')
     res.status(StatusCodes.OK).json(board)
