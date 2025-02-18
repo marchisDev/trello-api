@@ -64,7 +64,6 @@ const findOneById = async (boardId) => {
 // query tong hop (aggregate) du lieu de lay toan bo columns va card thuoc ve board
 const getDetails = async (id) => {
   try {
-    // console.log('id: ', id)
     // const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({ _id: new ObjectId(id) })
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
