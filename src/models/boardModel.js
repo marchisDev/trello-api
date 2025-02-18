@@ -5,6 +5,7 @@ import { BOARD_TYPES } from '~/utils/constants'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 import { columnModel } from '~/models/columnModel'
 import { cardModel } from '~/models/cardModel'
+import { pagingSkipValue } from '~/utils/algorithms'
 
 // define Collection Schema
 const BOARD_COLLECTION_NAME = 'boards'
@@ -14,6 +15,12 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   description: Joi.string().required().min(3).max(255).trim().strict(),
   type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE).required(),
   columnOrderIds: Joi.array()
+    .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+    .default([]),
+  ownerIds: Joi.array()
+    .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+    .default([]),
+  memberIds: Joi.array()
     .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
     .default([]),
   createdAt: Joi.date().timestamp('javascript').default(Date.now()),
@@ -159,6 +166,56 @@ const update = async (boardId, updateData) => {
   }
 }
 
+const getBoards = async (userId, page, itemsPerPage) => {
+  try {
+    const queryCondition = [
+      // Dk1: Board chua bi xoa
+      { _destroy: false },
+      // Dk2: cai thang userId dang thuc hien request phai thuoc 1 trong 2 mang ownerIds hoac memberIds
+      {
+        $or: [
+          { ownerIds: { $all: [new ObjectId(userId)] } },
+          { memberIds: { $all: [new ObjectId(userId)] } }
+        ]
+      }
+    ]
+
+    const query = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .aggregate(
+        [
+          { $match: { $and: queryCondition } },
+          // sort title cua board theo A-Z (Mac dinh chu B hoa se dung truoc chu a thuong)
+          { $sort: { title: 1 } },
+          // $facet: xu li nhieu luong trong 1 query
+          {
+            $facet: {
+              // Luong 01: Query Boards
+              queryBoards: [
+                { $skip: pagingSkipValue(page, itemsPerPage) }, // bo qua so luong ban ghi cua nhung page truoc do
+                { $limit: itemsPerPage } // gioi han toi da so luong ban ghi tra ve tren 1 page
+              ],
+              // Luong 02: Query dem tong all so luong ban ghi boards trong DB va tra ve vao bien countedAllBoards
+              queryTotalBoards: [{ $count: 'countedAllBoards' }]
+            }
+          }
+        ],
+        // Khai bao them thuoc tinh collection locale 'en' de fix vu chu B hoa va chu a thuong o tren
+        { locale: 'en' }
+      ).toArray()
+    // console.log('query: ', query)
+
+    const res = query[0]
+
+    return {
+      boards: res.queryBoards || [],
+      totalBoards: res.queryTotalBoards[0]?.countedAllBoards || 0
+    }
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
@@ -167,5 +224,6 @@ export const boardModel = {
   getDetails,
   pushColumnOrderIds,
   update,
-  pullColumnOrderIds
+  pullColumnOrderIds,
+  getBoards
 }
