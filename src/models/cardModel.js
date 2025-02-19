@@ -37,7 +37,7 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
 
   createdAt: Joi.date().timestamp('javascript').default(Date.now),
   updatedAt: Joi.date().timestamp('javascript').default(null),
-  _destroy: Joi.boolean().default(false),
+  _destroy: Joi.boolean().default(false)
 })
 
 // chi dinh ra nhung field khong duoc update trong ham update
@@ -45,7 +45,7 @@ const INVALID_UPDATE_FIELDS = ['_id', 'boardId', 'createdAt']
 
 const validateBeforeCreate = async (data) => {
   return await CARD_COLLECTION_SCHEMA.validateAsync(data, {
-    abortEarly: false,
+    abortEarly: false
   })
 }
 
@@ -56,7 +56,7 @@ const createNew = async (data) => {
     const newCardToAdd = {
       ...validData,
       boardId: new ObjectId(validData.boardId),
-      columnId: new ObjectId(validData.columnId),
+      columnId: new ObjectId(validData.columnId)
     }
     const createdCard = GET_DB()
       .collection(CARD_COLLECTION_NAME)
@@ -119,6 +119,26 @@ const deleteManyByColumnId = async (columnId) => {
   }
 }
 
+/**
+ * Day 1 phan tu comment vao dau mang comments cua card
+ * Trong JS nguoc lai voi push(them phan tu vao cuoi mang) se la unshif(them phan tu vao dau mang)
+ * Nhung trong mongoDB hien tai thi chi co $push - mac dinh day phan tu vao cuoi mang
+ * Di nhien cu luu comment vao cuoi mang cung duoc nhung se hoc cach them phan tu vao dau mang trong mongoDB
+ * Van dung $push nhung boc data vao Array de trong $each va chi dinh $position bang 0
+ */
+
+const unshiftNewComment = async (cardId, commentData) => {
+  try {
+    const result = await GET_DB().collection(CARD_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(cardId) },
+      { $push: { comments: { $each: [commentData], $position: 0 } } },
+      { returnDocument: 'after' }
+    )
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 export const cardModel = {
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
@@ -126,4 +146,5 @@ export const cardModel = {
   findOneById,
   update,
   deleteManyByColumnId,
+  unshiftNewComment
 }
