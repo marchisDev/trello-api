@@ -6,6 +6,7 @@ import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 import { columnModel } from '~/models/columnModel'
 import { cardModel } from '~/models/cardModel'
 import { pagingSkipValue } from '~/utils/algorithms'
+import { userModel } from './userModel'
 
 // define Collection Schema
 const BOARD_COLLECTION_NAME = 'boards'
@@ -13,7 +14,15 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   title: Joi.string().required().min(3).max(50).trim().strict(),
   slug: Joi.string().required().min(3).trim().strict(),
   description: Joi.string().required().min(3).max(255).trim().strict(),
-  type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE).required(),
+
+  /**
+   * Tips: thay vi goi lan luot tat ca type cua board de cho vao ham valid() thi co the viet gon lai
+   * bang Object.values() ket hop spead operator cua JS. cu the: .valid(...Object.values(BOARD_TYPES))
+   * Lam nhu the thi sau nay du cho co them hay sua gi vao cai BOARD_TYPES trong file constants.js
+   * thi o nhung cho dung Joi trong model hay validation cung khong can phai dung vao nua.
+   */
+  type: Joi.string().required().valid(...Object.values(BOARD_TYPES)),
+  // type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE).required(),
   columnOrderIds: Joi.array()
     .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
     .default([]),
@@ -104,6 +113,26 @@ const getDetails = async (userId, boardId) => {
           }
           // eslint-disable-next-line comma-dangle
         },
+        {
+          $lookup: {
+            from: userModel.USER_COLLECTION_NAME,
+            localField: 'ownerIds',
+            foreignField: '_id',
+            as: 'owners',
+            // pipeline trong lookup la de xu li 1 or nhieu luong can thiet
+            // $project: chi lay ra nhung field khong muon lay bang cach gan no gia tri bang 0
+            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+          }
+        },
+        {
+          $lookup: {
+            from: userModel.USER_COLLECTION_NAME,
+            localField: 'memberIds',
+            foreignField: '_id',
+            as: 'members',
+            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+          }
+        }
       ])
       .toArray()
     // console.log('result: ', result)

@@ -1,5 +1,6 @@
 import { cardModel } from '~/models/cardModel'
 import { columnModel } from '~/models/columnModel'
+import { CloudinaryProvider } from '~/providers/CloudinaryProvider'
 
 const createNew = async (reqBody) => {
   try {
@@ -25,13 +26,37 @@ const createNew = async (reqBody) => {
   }
 }
 
-const update = async (cardId, reqBody) => {
+const update = async (cardId, reqBody, cardCoverFile, userInfor) => {
   try {
     const updateData = {
       ...reqBody,
       updatedAt: Date.now()
     }
-    const updatedCard = await cardModel.update(cardId, updateData)
+
+    let updatedCard = {}
+    if (cardCoverFile) {
+      const uploadResult = await CloudinaryProvider.streamUpload(
+        cardCoverFile.buffer,
+        'card-covers'
+      )
+
+      // Luu lai url (secure_url) cua cua cai file anh vao trong DB
+      updatedCard = await cardModel.update(cardId, {
+        cover: uploadResult.secure_url
+      })
+    } else if(updateData.commentToAdd) {
+      // Tao du lieu comment de them vao DB, can bo sung nhung field can thiet
+      const commentData = {
+        ...updateData.commentToAdd,
+        commentedAt: Date.now(),
+        userId: userInfor._id,
+        userEmail: userInfor.email,
+      }
+      updatedCard = await cardModel.unshiftNewComment(cardId, commentData)
+    } else {
+      // Cac TH update chung nhu title, description, ...
+      updatedCard = await cardModel.update(cardId, updateData)
+    }
     return updatedCard
   } catch (error) {
     throw error

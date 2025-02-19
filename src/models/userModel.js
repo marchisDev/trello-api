@@ -19,8 +19,14 @@ const USER_COLLECTION_SCHEMA = Joi.object({
   username: Joi.string().required().trim().strict(),
   displayName: Joi.string().required().trim().strict(),
   avatar: Joi.string().default(null),
+  /**
+   * Tips: thay vi goi lan luot tat ca type cua board de cho vao ham valid() thi co the viet gon lai
+   * bang Object.values() ket hop spead operator cua JS. cu the: .valid(...Object.values(BOARD_TYPES))
+   * Lam nhu the thi sau nay du cho co them hay sua gi vao cai BOARD_TYPES trong file constants.js
+   * thi o nhung cho dung Joi trong model hay validation cung khong can phai dung vao nua.
+   */
   role: Joi.string()
-    .valid(USER_ROLES.CLIENT, USER_ROLES.ADMIN)
+    .valid(...Object.values(USER_ROLES))
     .default(USER_ROLES.CLIENT),
 
   isActive: Joi.boolean().default(false),
