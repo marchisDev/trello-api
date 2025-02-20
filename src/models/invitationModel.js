@@ -76,7 +76,7 @@ const createNewBoardInvitation = async (data) => {
       .insertOne(newInvitationToAdd)
     return createInvitation
   } catch (error) {
-    throw new error()
+    throw new Error(error)
   }
 }
 
@@ -141,7 +141,7 @@ const findByUser = async (userId) => {
             localField: 'inviterId', // nguoi di moi
             foreignField: '_id',
             as: 'inviter',
-            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+            pipeline: [{ $project: { password: 0, verifyToken: 0 } }]
           }
         },
         {
@@ -150,7 +150,7 @@ const findByUser = async (userId) => {
             localField: 'inviteeId', // nguoi duoc moi
             foreignField: '_id',
             as: 'invitee',
-            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+            pipeline: [{ $project: { password: 0, verifyToken: 0 } }]
           }
         },
         {
@@ -169,7 +169,6 @@ const findByUser = async (userId) => {
     throw new Error(error)
   }
 }
-
 
 export const invitationModel = {
   INVITATION_COLLECTION_NAME,
