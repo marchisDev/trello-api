@@ -9,6 +9,12 @@ import { env } from '~/config/environment'
 import { APIs_V1 } from '~/routes/v1'
 import { errorHandlingMiddleware } from '~/middlewares/errorHandlingMiddleware'
 import cookieParser from 'cookie-parser'
+import { inviteUserToBoardSocket } from '~/sockets/inviteUserToBoardSocket'
+
+// Xu li socket.io realtime
+//https://socket.io/get-started/chat/#integrating-socketio
+import socketIo from 'socket.io'
+import http from 'http'
 
 const START_SERVER = () => {
   const app = express()
@@ -35,14 +41,27 @@ const START_SERVER = () => {
   // Middleware to handle errors
   app.use(errorHandlingMiddleware)
 
+  // Tao 1 cai server moi boc app cua express de lam realtime socket.io
+  const server = http.createServer(app)
+  // khoi tao bien io voi server va cors
+  const io = socketIo(server, { cors: corsOptions })
+  io.on('connection', (socket) => {
+    // goi cac socket tuy theo tinh nang
+    inviteUserToBoardSocket(socket)
+
+    // .....
+  })
+
   if (env.BUILD_MODE === 'production') {
-    app.listen(process.env.PORT, () => {
+    // dung server.listen thay vi app.listen de co the dung socket.io vi luc nay server da bao gom config socket.io va express app
+    server.listen(process.env.PORT, () => {
       console.log(
         `3. Production Hello ${env.AUTHOR}, Backend Server is running successfully at Port: ${process.env.PORT}`
       )
     })
   } else {
-    app.listen(env.LOCAL_DEV_APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
+    // dung server.listen thay vi app.listen de co the dung socket.io vi luc nay server da bao gom config socket.io va express app
+    server.listen(env.LOCAL_DEV_APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
       console.log(
         `3.Local Dev Hello ${env.AUTHOR}, Backend Server is running successfully at http://${env.LOCAL_DEV_APP_HOST}:${env.LOCAL_DEV_APP_PORT}/`
       )
@@ -55,7 +74,6 @@ const START_SERVER = () => {
     console.log('5. MongoDB connection closed successfully!')
   })
 }
-
 
 // chi khi ket noi thanh cong toi MongoDB thi moi chay server
 // Immediately Invoked Function Expression (IIFE) / Anonymous Async Function

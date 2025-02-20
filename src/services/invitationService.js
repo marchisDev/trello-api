@@ -78,7 +78,53 @@ const getInvitations = async (userId) => {
   }
 }
 
+export const updateBoardInvitation = async (userId, invitationId, status) => {
+  try {
+    // tim ban ghi invitation trong model
+    const getInvitation = await invitationModel.findOneById(invitationId)
+    if (!getInvitation) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Invitation not found')
+    }
+
+    // sau khi co Invitation roi thi lay full thong tin cua board
+    const boardId = getInvitation.boardInvitation.boardId
+    const getBoard = await boardModel.findOneById(boardId)
+    if (!getBoard) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found')
+    }
+
+    // Kiem tra xem neu status la ACCEPTED join board ma cai th user (invitee) da la owner hoac member cua
+    // board roi thi tra ve thong bao loi luon
+    // Note: 2 mang memberIds va ownerIds cua board deu la ObjectId nen tra ve kieu String luon de check
+    const boardOWnerAndMemberIds = [...getBoard.ownerIds, ...getBoard.memberIds].toString()
+    if (status === BOARD_INVITATION_STATUS.ACCEPTED && boardOWnerAndMemberIds.includes(userId)) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'You are already a member of this board')
+    }
+
+    // Tao du lieu de update ban ghi Invitation
+    const updateData = {
+      boardInvitation: {
+        ...getInvitation.boardInvitation,
+        status: status
+      }
+    }
+
+    // B1: Cap nhat status trong ban ghoi Invitation
+    const updatedInvitation = await invitationModel.update(invitationId, updateData)
+    // B2: Neu TH Accepted 1 loi moi thanh cong, thi can phai them thong tin cua thanh
+    // user(userId) vao ban ghi memberIds trong collection Board
+    if (updatedInvitation.boardInvitation.status === BOARD_INVITATION_STATUS.ACCEPTED) {
+      await boardModel.pushMemberIds(boardId, userId)
+    }
+
+    return updatedInvitation
+  } catch (error) {
+    throw error
+  }
+}
+
 export const invitationService = {
   createNewBoardInvitation,
-  getInvitations
+  getInvitations,
+  updateBoardInvitation
 }
