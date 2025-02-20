@@ -56,6 +56,29 @@ const createNewBoardInvitation = async (reqBody, inviterId) => {
   }
 }
 
+const getInvitations = async (userId) => {
+  try {
+    const getInvitations = await invitationModel.findByUser(userId)
+    // console.log(getInvitations)
+
+    // vi cac du lieu inviter, invitee, board la dang o gia tri 1 mang 1 phan tu neu lay ra duoc nen chung ta
+    // se bien doi no ve Json Object truoc khi tra ve chp phia FE
+    const resInvitations = getInvitations.map((i) => {
+      return {
+        ...i,
+        inviter: i.inviter[0] || {},
+        invitee: i.invitee[0] || {},
+        board: i.board[0] || {}
+      }
+    })
+
+    return resInvitations
+  } catch (error) {
+    throw error
+  }
+}
+
 export const invitationService = {
-  createNewBoardInvitation
+  createNewBoardInvitation,
+  getInvitations
 }

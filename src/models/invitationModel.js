@@ -3,7 +3,8 @@ import { ObjectId } from 'mongodb'
 import { GET_DB } from '~/config/mongodb'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 import { INVITATION_TYPES, BOARD_INVITATION_STATUS } from '~/utils/constants'
-
+import { userModel } from './userModel'
+import { boardModel } from './boardModel'
 // Define collection name
 const INVITATION_COLLECTION_NAME = 'invitations'
 const INVITATION_COLLECTION_SCHEMA = Joi.object({
@@ -120,10 +121,61 @@ const update = async (invitationId, updateData) => {
   }
 }
 
+// query tong hop (aggregate) du lieu de lay nhung ban ghi invitation thuoc ve 1 user cu the
+const findByUser = async (userId) => {
+  try {
+    const queryCondition = [
+      { inviteeId: new ObjectId(userId) }, //tim theo inviteeId - chinh la nguoi dang thuc hien request
+      // Dk1: Board chua bi xoa
+      { _destroy: false }
+    ]
+
+    // const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({ _id: new ObjectId(id) })
+    const results = await GET_DB()
+      .collection(INVITATION_COLLECTION_NAME)
+      .aggregate([
+        { $match: { $and: queryCondition } },
+        {
+          $lookup: {
+            from: userModel.USER_COLLECTION_NAME,
+            localField: 'inviterId', // nguoi di moi
+            foreignField: '_id',
+            as: 'inviter',
+            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+          }
+        },
+        {
+          $lookup: {
+            from: userModel.USER_COLLECTION_NAME,
+            localField: 'inviteeId', // nguoi duoc moi
+            foreignField: '_id',
+            as: 'invitee',
+            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+          }
+        },
+        {
+          $lookup: {
+            from: boardModel.BOARD_COLLECTION_NAME,
+            localField: 'boardInvitation.boardId', // thong tin cua board
+            foreignField: '_id',
+            as: 'board'
+          }
+        }
+      ])
+      .toArray()
+    // console.log('result: ', result)
+    return results
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+
 export const invitationModel = {
   INVITATION_COLLECTION_NAME,
   INVITATION_COLLECTION_SCHEMA,
   createNewBoardInvitation,
   findOneById,
-  update
+  update,
+  findByUser
 }
