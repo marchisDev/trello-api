@@ -44,15 +44,18 @@ const update = async (cardId, reqBody, cardCoverFile, userInfor) => {
       updatedCard = await cardModel.update(cardId, {
         cover: uploadResult.secure_url
       })
-    } else if(updateData.commentToAdd) {
+    } else if (updateData.commentToAdd) {
       // Tao du lieu comment de them vao DB, can bo sung nhung field can thiet
       const commentData = {
         ...updateData.commentToAdd,
         commentedAt: Date.now(),
         userId: userInfor._id,
-        userEmail: userInfor.email,
+        userEmail: userInfor.email
       }
       updatedCard = await cardModel.unshiftNewComment(cardId, commentData)
+      // TH add hoac remove thanh vien ra khoi card
+    } else if (updateData.incomingMemberInfo) {
+      updatedCard = await cardModel.updateMembers(cardId, updateData.incomingMemberInfo)
     } else {
       // Cac TH update chung nhu title, description, ...
       updatedCard = await cardModel.update(cardId, updateData)
