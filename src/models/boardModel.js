@@ -207,7 +207,7 @@ const update = async (boardId, updateData) => {
   }
 }
 
-const getBoards = async (userId, page, itemsPerPage) => {
+const getBoards = async (userId, page, itemsPerPage, queryFilters) => {
   try {
     const queryCondition = [
       // Dk1: Board chua bi xoa
@@ -220,6 +220,27 @@ const getBoards = async (userId, page, itemsPerPage) => {
         ]
       }
     ]
+
+    // Xu li query filter chho tung TH serach board vi du search theo titl
+    if (queryFilters) {
+      // console.log('queryFilters:', queryFilters) //queryFilters: { title: 'board' }
+      // console.log(Object.keys(queryFilters)) //[ 'title' ]
+
+      Object.keys(queryFilters).forEach((key) => {
+        // queryFilter[key] vi du queryFilter[title] neu BE day len q[title]
+        // co phan biet chu hoa chu thuong
+        // queryCondition.push({
+        //   [key]: { $regex: queryFilters[key] }
+        // })
+
+        // phan biet chu hoa chu thuong
+        queryCondition.push({
+          [key]: { $regex: new RegExp(queryFilters[key], 'i') }
+        })
+      })
+    }
+
+    // console.log('queryCondition: ', queryCondition)
 
     const query = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
