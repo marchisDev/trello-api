@@ -74,7 +74,7 @@ const refreshToken = async (req, res, next) => {
     })
     res.status(StatusCodes.OK).json(result)
   } catch (error) {
-    next(new ApiError(StatusCodes.FORBIDDEN, 'Please sign in! (Error from refreshToken)'))
+    next(new ApiError(StatusCodes.FORBIDDEN, 'Please login in!'))
   }
 }
 

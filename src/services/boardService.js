@@ -35,8 +35,6 @@ const createNew = async (userId, reqBody) => {
 const getDetails = async (userId, boardId) => {
   // eslint-disable-next-line no-useless-catch
   try {
-
-
     // lay ban ghi board sau khi goi (tuy muc dich du an ma co can buoc nay hay khong)
     const board = await boardModel.getDetails(userId, boardId)
 
@@ -50,7 +48,9 @@ const getDetails = async (userId, boardId) => {
     // Dua card ve dung column cua no
     resBoard.columns.forEach((column) => {
       // cach dung .equals nay la boi cta hieu ObjectId cua mongoDB co method support equals
-      column.cards = resBoard.cards.filter((card) => card.columnId.equals(column._id))
+      column.cards = resBoard.cards.filter((card) =>
+        card.columnId.equals(column._id)
+      )
       // column.cards = resBoard.cards.filter((card) => card.columnId.toString() === column._id.toString())
     })
 
@@ -98,7 +98,7 @@ const moveCardToDifferentColumn = async (reqBody) => {
   }
 }
 
-const getBoards = async (userId, page, itemsPerPage) => {
+const getBoards = async (userId, page, itemsPerPage, queryFilters) => {
   try {
     // Neu khong ton tai page hoac itemsPerPage tu phia FE thi BE se can phia luon gan gia tri mac dinh
     if (!page) {
@@ -108,7 +108,12 @@ const getBoards = async (userId, page, itemsPerPage) => {
       itemsPerPage = DEFAULT_ITEMS_PER_PAGE
     }
 
-    const results = await boardModel.getBoards(userId, parseInt(page, 10), parseInt(itemsPerPage, 10))
+    const results = await boardModel.getBoards(
+      userId,
+      parseInt(page, 10),
+      parseInt(itemsPerPage, 10),
+      queryFilters
+    )
 
     return results
   } catch (error) {
